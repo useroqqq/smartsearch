@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Поиск ближайших заправок</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="sidebar" id="sidebar">
+                <button id="toggleSidebar" class="toggle-sidebar" title="Скрыть/показать панель">◀</button>
+                <div class="sidebar-content">
+                    <header>
+                        <h1>Поиск ближайших заправок</h1>
+                        <div class="controls">
+                            <button id="findLocation">Определить местоположение</button>
+                            <div class="search-controls">
+                                <div class="search-group">
+                                    <button id="searchNearby">Найти заправки поблизости</button>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+                    <div id="routeInfo" class="route-info">
+                        <h2>Информация о маршруте</h2>
+                        <div id="routeDetails"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="map-container">
+                <div id="map"></div>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html> 

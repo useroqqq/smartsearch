@@ -1,0 +1,17 @@
+{
+  "name": "nearest-station-finder",
+  "version": "1.0.0",
+  "description": "Поиск ближайших заправок и сервисных центров с использованием Яндекс Карт",
+  "main": "index.js",
+  "scripts": {
+    "start": "parcel index.html",
+    "build": "parcel build index.html"
+  },
+  "dependencies": {
+    "parcel-bundler": "^1.12.5"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.0",
+    "@babel/preset-env": "^7.22.20"
+  }
+} 
