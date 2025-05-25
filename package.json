@@ -1,7 +1,7 @@
 {
   "name": "nearest-station-finder",
   "version": "1.0.0",
-  "description": "Поиск ближайших заправок и сервисных центров с использованием Яндекс Карт",
+  "description": "Поиск ближайших заправок",
   "main": "index.js",
   "scripts": {
     "start": "parcel index.html",

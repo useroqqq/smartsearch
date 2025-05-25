@@ -5,14 +5,56 @@ let searchResults = [];
 let routeControl;
 let nearestObjects = [];
 let currentRouteIndex = 0;
+let baseLayers = {};
+let isSelectingLocation = false;
+
+// Создаем кастомные иконки
+const userIcon = L.icon({
+    iconUrl: 'https://img.icons8.com/color/48/marker--v1.png',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
+});
+
+const gasStationIcon = L.icon({
+    iconUrl: 'https://img.icons8.com/color-glass/48/gas-station.png',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
+});
 
 // Инициализация карты
 function initMap() {
     map = L.map('map').setView([55.76, 37.64], 10);
     
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    // Определяем базовые слои карты
+    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
+    });
+
+    const satelliteLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+        attribution: '© Google'
+    });
+
+    const hybridLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        attribution: '© Google'
+    });
+
+    // Добавляем слои на карту
+    baseLayers = {
+        "Схема": osmLayer,
+        "Спутник": satelliteLayer,
+        "Гибрид": hybridLayer
+    };
+
+    // Добавляем переключатель слоев
+    L.control.layers(baseLayers, null, {
+        position: 'topright',
+        collapsed: false
     }).addTo(map);
+
+    // Устанавливаем схему как слой по умолчанию
+    osmLayer.addTo(map);
 
     // Добавляем кнопку геолокации
     const geolocationButton = L.control({ position: 'topright' });
@@ -45,10 +87,7 @@ async function getCurrentLocation() {
         }
 
         userMarker = L.marker(currentLocation, {
-            icon: L.divIcon({
-                className: 'user-marker',
-                html: '<div style="background-color: red; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>'
-            })
+            icon: userIcon
         }).addTo(map);
 
         return currentLocation;
@@ -70,7 +109,7 @@ async function searchNearby() {
         currentRouteIndex = 0;
 
         const bounds = map.getBounds();
-        const radius = 1000; // радиус поиска в метрах
+        const radius = 100000; // радиус поиска в метрах
 
         // Используем Overpass API для поиска заправок
         const query = `
@@ -125,17 +164,7 @@ async function searchNearby() {
             
             // Создаем маркер на карте
             const marker = L.marker(item.coords, {
-                icon: L.divIcon({
-                    className: 'object-marker',
-                    html: `<div style="background-color: #ff4444; 
-                           color: white; 
-                           width: 24px; 
-                           height: 24px; 
-                           border-radius: 50%; 
-                           border: 2px solid white;
-                           text-align: center;
-                           line-height: 20px;">${index + 1}</div>`
-                })
+                icon: gasStationIcon
             }).addTo(map);
 
             marker.bindPopup(`
@@ -237,6 +266,7 @@ async function buildRoute(destination) {
             router: L.Routing.osrmv1({
                 serviceUrl: 'https://router.project-osrm.org/route/v1',
                 profile: 'driving',
+				language: 'ru',
                 alternatives: false
             }),
             lineOptions: {
@@ -259,7 +289,8 @@ async function buildRoute(destination) {
             ], {
                 createMarker: function() { return null; },
                 dragStyles: [{ color: '#ff0000', weight: 4, opacity: 0.8 }]
-            })
+            }),
+			language: 'ru' 
         }).addTo(map);
 
         // Переводим элементы управления маршрутом
@@ -377,6 +408,50 @@ function toggleSidebar() {
     }, 300);
 }
 
+// Функция для включения режима выбора местоположения
+function enableLocationSelection() {
+    if (isSelectingLocation) {
+        disableLocationSelection();
+        return;
+    }
+
+    isSelectingLocation = true;
+    document.getElementById('selectLocation').textContent = 'Отменить выбор';
+    document.getElementById('map').classList.add('map-selecting-location');
+    
+    // Добавляем обработчик клика по карте
+    map.once('click', handleMapClick);
+}
+
+// Функция для отключения режима выбора местоположения
+function disableLocationSelection() {
+    isSelectingLocation = false;
+    document.getElementById('selectLocation').textContent = 'Выбрать точку вручную';
+    document.getElementById('map').classList.remove('map-selecting-location');
+    map.off('click', handleMapClick);
+}
+
+// Обработчик клика по карте
+function handleMapClick(e) {
+    const { lat, lng } = e.latlng;
+    currentLocation = [lat, lng];
+    
+    // Обновляем маркер на карте
+    if (userMarker) {
+        map.removeLayer(userMarker);
+    }
+
+    userMarker = L.marker(currentLocation, {
+        icon: userIcon
+    }).addTo(map);
+
+    // Центрируем карту на выбранной точке
+    map.setView(currentLocation, 15);
+    
+    // Отключаем режим выбора
+    disableLocationSelection();
+}
+
 // Инициализация обработчиков событий
 document.addEventListener('DOMContentLoaded', () => {
     initMap();
@@ -384,6 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Добавляем обработчики событий
     document.getElementById('findLocation').addEventListener('click', getCurrentLocation);
     document.getElementById('searchNearby').addEventListener('click', searchNearby);
+    document.getElementById('selectLocation').addEventListener('click', enableLocationSelection);
     
     // Обработчик для кнопки скрытия панели
     const toggleButton = document.getElementById('toggleSidebar');
